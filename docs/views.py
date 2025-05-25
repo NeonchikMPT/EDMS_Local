@@ -141,15 +141,15 @@ def document_edit(request, doc_id):
                         logger.info(f"Email sent to {recipient.email}")
                     except Exception as e:
                         logger.error(f"Error sending email to {recipient.email}: {str(e)}")
-            for recipient in old_recipients - new_recipients:
-                Signature.objects.filter(document=doc, user=recipient).delete()
+                for recipient in old_recipients - new_recipients:
+                    Signature.objects.filter(document=doc, user_id=recipient.id).delete()
 
             if new_recipients:
                 doc.status = 'sent'
+                messages.success(request, 'Документ успешно отредактирован и отправлен на подпись.')
             else:
                 doc.status = 'draft'
-                messages.warning(request,
-                                 'Документ сохранен как черновик. Выберите получателей для отправки на подпись.')
+                messages.warning(request, 'Документ отредактирован и сохранен как черновик. Выберите получателей для отправки на подпись.')
             doc.save()
 
             DocumentLog.objects.create(
@@ -159,7 +159,6 @@ def document_edit(request, doc_id):
                 comment='Документ отредактирован'
             )
             logger.info(f"Document edited: {doc.title} by {request.user.email}")
-            messages.success(request, 'Документ отредактирован')
             return redirect('my_documents')
     else:
         form = DocumentForm(instance=doc)
