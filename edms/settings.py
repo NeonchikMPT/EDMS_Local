@@ -1,6 +1,5 @@
 from pathlib import Path
 from decouple import config
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,10 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DJANGO_DEBUG', default='False') == 'True'  # Позволяет управлять через переменную окружения
-
-# Укажи домен или IP твоего сервера
-ALLOWED_HOSTS = ['edms-ozqc.onrender.com', '127.0.0.1', 'localhost']  # Обновлено для Render
+DEBUG = True  # Обязательно для локальной разработки
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -28,7 +25,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Добавлено для статических файлов
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -57,24 +53,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'edms.wsgi.application'
 
 # Database
-# Старая настройка базы данных (закомментирована)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': config('DB_NAME', default='edms_db'),  # Имя базы можно тоже сделать переменной
-#         'USER': config('DB_USER', default='postgres'),
-#         'PASSWORD': config('DB_PASSWORD'),
-#         'HOST': config('DB_HOST', default='localhost'),
-#         'PORT': config('DB_PORT', default='5432'),
-#     }
-# }
-
-# Новая настройка базы данных через DATABASE_URL для Render
 DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL'),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
+    }
 }
 
 # Password validation
@@ -94,8 +81,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'ru-ru'  # Изменено для русского интерфейса
+TIME_ZONE = 'Europe/Moscow'  # Московское время
 USE_I18N = True
 USE_TZ = True
 
@@ -106,8 +93,7 @@ AUTH_USER_MODEL = 'users.User'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # Добавлено для продакшена
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -115,8 +101,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = '/users/login/'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 1209600  # 2 недели
-SESSION_COOKIE_SECURE = True  # Только HTTPS в продакшене
+SESSION_COOKIE_AGE = 1209600
+SESSION_COOKIE_SECURE = False  # Для HTTP
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
@@ -130,14 +116,6 @@ EMAIL_HOST_USER = 'dsistema@internet.ru'
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'dsistema@internet.ru'
 
-# Настройки безопасности для продакшена
-SECURE_SSL_REDIRECT = True  # Перенаправление всех HTTP-запросов на HTTPS
-SECURE_HSTS_SECONDS = 31536000  # Включение HSTS (1 год)
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
-X_FRAME_OPTIONS = 'DENY'
-
-CSRF_COOKIE_SECURE = True  # Только HTTPS
-CSRF_TRUSTED_ORIGINS = ['https://edms-ozqc.onrender.com']  # Обновлено для Render
+CSRF_COOKIE_SECURE = False  # Для HTTP
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+SECURE_SSL_REDIRECT = False  # Отключаем перенаправление на HTTPS
