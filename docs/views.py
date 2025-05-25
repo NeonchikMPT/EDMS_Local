@@ -69,10 +69,10 @@ def document_create(request):
                 doc.status = 'sent'
                 for recipient in recipients:
                     Signature.objects.get_or_create(document=doc, user=recipient)
+                messages.success(request, 'Документ успешно создан и отправлен на подпись.')
             else:
                 doc.status = 'draft'
-                messages.warning(request,
-                                 'Документ сохранен как черновик. Выберите получателей для отправки на подпись.')
+                messages.warning(request, 'Документ создан и сохранен как черновик. Выберите получателей для отправки на подпись.')
             doc.save()
 
             DocumentLog.objects.create(
@@ -102,7 +102,6 @@ def document_create(request):
                     except Exception as e:
                         logger.error(f"Error sending email to {recipient.email}: {str(e)}")
 
-            messages.success(request, 'Документ создан')
             return redirect('my_documents')
     else:
         form = DocumentForm()
@@ -163,6 +162,34 @@ def document_edit(request, doc_id):
     else:
         form = DocumentForm(instance=doc)
     return render(request, 'docs/document_edit.html', {'form': form, 'doc': doc})
+
+@login_required
+def document_delete(request, doc_id):
+    doc = get_object_or_404(Document, id=doc_id)
+    if request.user != doc.owner and request.user.role != 'admin':
+        return error_403(request)
+
+    if request.method == 'POST':
+        # Log the deletion
+        DocumentLog.objects.create(
+            document=doc,
+            user=request.user,
+            action='delete',
+            comment='Документ удален'
+        )
+        logger.info(f"Document deleted: {doc.title} by {request.user.email}")
+
+        # Delete associated file from storage
+        if doc.file:
+            doc.file.delete(save=False)
+
+        # Delete the document (cascades to signatures, notifications, logs)
+        doc.delete()
+
+        messages.success(request, 'Документ успешно удален.')
+        return redirect('my_documents')
+
+    return redirect('document_edit', doc_id=doc.id)
 
 @login_required
 def document_sign(request, doc_id):
