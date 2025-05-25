@@ -165,7 +165,8 @@ EDMS хранит медиа-файлы локально:
 1. Создайте папки:
 
    ```bash
-   mkdir -p media/avatars media/docs
+   mkdir media\avatars
+   mkdir media\docs
    ```
 
 2. Убедитесь, что в `edms/settings.py` настроено:
